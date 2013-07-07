@@ -4,18 +4,16 @@ var ge;
     
 google.load("earth", "1");
 
-$(function() {
-  init();
-});
+$(init);
 
 function init() {
   google.earth.createInstance("map3d", initCallback, failureCallback);
 
   setTimeout(function() {
     $("#map3d a").hide();
-  }, 1000);
+  }, 2000);
 
-  addSampleButton("Move the camera!", buttonClick);
+  //addSampleButton("Move the camera!", buttonClick);
 }
 
 function initCallback(instance) {
@@ -29,7 +27,7 @@ function initCallback(instance) {
   // add some layers
   setMode({
     borders: false,
-    roads: true
+    roads: false
   });
   
 
@@ -59,9 +57,9 @@ function initCallback(instance) {
 }
 
 function doTest() {
-  var pos1 = {"latitude":32.27145100709465,"longitude":-116.81154265232085,"altitude":16809.051763723182,"tilt":72.31765881492275,"roll":4.734831323755789e-9,"heading":-37.032850334257};
-  var pos2 = {"latitude":37.8493851451606,"longitude":-122.49411333581865,"altitude":1707.747135858544,"tilt":72.75207589370922,"roll":-3.8413149165375626e-10,"heading":-40.19198711522715}
-  var path = getStraightPath(pos1, pos2, 100000);
+  var pos1 = {"latitude":32.27145100709465,"longitude":-116.81154265232085,"altitude":5000,"tilt":72.31765881492275,"roll":4.734831323755789e-9,"heading":-37.032850334257};
+  var pos2 = {"latitude":37.8493851451606,"longitude":-122.49411333581865,"altitude":1000,"tilt":72.75207589370922,"roll":-3.8413149165375626e-10,"heading":-40.19198711522715}
+  var path = getStraightPath(pos1, pos2, 10000000);
 
   var i = 0;
   var interval = setInterval(function() {
@@ -119,4 +117,7 @@ function getPosition(camera) {
 function setMode(mode) {
   ge.getLayerRoot().enableLayerById(ge.LAYER_BORDERS, mode.borders);
   ge.getLayerRoot().enableLayerById(ge.LAYER_ROADS, mode.roads);
+  ge.getLayerRoot().enableLayerById(ge.LAYER_TERRAIN, true);
+  ge.getLayerRoot().enableLayerById(ge.LAYER_TREES, true);
+  ge.getLayerRoot().enableLayerById(ge.LAYER_BUILDINGS, true);
 }
