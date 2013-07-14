@@ -34,41 +34,84 @@ function initCallback(instance) {
   ge.getOptions().setStatusBarVisibility(ge.VISIBILITY_HIDE); 
   ge.getOptions().setFadeInOutEnabled(false);
 
-  setCamera({
-    latitude: 36,
-    longitude: -121,
-    altitude: 10000,
-    heading: 0,
-    tilt: 80,
-    roll: 0
+  var framesUri = getParameterByName("framesUri");
+  $.get(framesUri)
+  .done(function(frames) {
+    doFrames(JSON.parse(frames));
   });
 
-  setInterval(function() {
-    var pos = getPosition(ge.getView().copyAsCamera(ge.ALTITUDE_ABSOLUTE));
+  // setCamera({
+  //   latitude: 36,
+  //   longitude: -121,
+  //   altitude: 10000,
+  //   heading: 0,
+  //   tilt: 80,
+  //   roll: 0
+  // });
 
-    $("#coordinates").text(JSON.stringify(pos));
-  }, 1000);
+  // setInterval(function() {
+  //   var pos = getPosition(ge.getView().copyAsCamera(ge.ALTITUDE_ABSOLUTE));
 
-  // just for debugging purposes
-  document.getElementById('installed-plugin-version').innerHTML =
-    ge.getPluginVersion().toString();
+  //   $("#coordinates").text(JSON.stringify(pos));
+  // }, 1000);
 
-  doTest();
+  // // just for debugging purposes
+  // document.getElementById('installed-plugin-version').innerHTML =
+  //   ge.getPluginVersion().toString();
+
+  // doTest();
 }
 
-function doTest() {
-  var pos1 = {"latitude":32.27145100709465,"longitude":-116.81154265232085,"altitude":5000,"tilt":72.31765881492275,"roll":4.734831323755789e-9,"heading":-37.032850334257};
-  var pos2 = {"latitude":37.8493851451606,"longitude":-122.49411333581865,"altitude":1000,"tilt":72.75207589370922,"roll":-3.8413149165375626e-10,"heading":-40.19198711522715}
-  var path = getStraightPath(pos1, pos2, 10000000);
+function doFrames(frames) {
+  var frameIndex = -1;
 
-  var i = 0;
-  var interval = setInterval(function() {
-    setCamera(path[i++]);
-    if (i >= path.length) {
-      clearInterval(interval);
+  var timer = null;
+  var pausing = false;
+  google.earth.addEventListener(ge, "frameend", function() {
+    // Make sure updates are all settled.
+    timer && clearTimeout(timer);
+    if (!pausing) {
+      timer = setTimeout(function() {
+        pausing = true;
+        $("body").css("background-color", colorSignal(frameIndex)) // Signal ready
+        setTimeout(incrementAndSetCamera, 500); // Give time for the snapshot before moving to next frame.
+        timer = null;
+      }, 100);
     }
-  }, 75);
+  });
+
+  function incrementAndSetCamera() {
+    $("body").css("background-color", "#ffffff"); // Signal not ready
+    ++frameIndex;
+    pausing = false;
+    setCamera(frames[frameIndex]);
+  }
+
+  // GO!
+  incrementAndSetCamera();
+
+  function colorSignal(frameIndex) {
+    if (frameIndex < 0) return "#ffffff";
+
+    var hex = frameIndex.toString(16);
+    while (hex.length < 6) hex = "0" + hex;
+    return "#" + hex;
+  }
 }
+
+// function doTest() {
+//   var pos1 = {"latitude":32.27145100709465,"longitude":-116.81154265232085,"altitude":5000,"tilt":72.31765881492275,"roll":4.734831323755789e-9,"heading":-37.032850334257};
+//   var pos2 = {"latitude":37.8493851451606,"longitude":-122.49411333581865,"altitude":1000,"tilt":72.75207589370922,"roll":-3.8413149165375626e-10,"heading":-40.19198711522715}
+//   var path = getStraightPath(pos1, pos2, 100000);
+
+//   var i = 0;
+//   var interval = setInterval(function() {
+//     setCamera(path[i++]);
+//     if (i >= path.length) {
+//       clearInterval(interval);
+//     }
+//   }, 75);
+// }
 
 function failureCallback(errorCode) {
 }
@@ -120,4 +163,11 @@ function setMode(mode) {
   ge.getLayerRoot().enableLayerById(ge.LAYER_TERRAIN, true);
   ge.getLayerRoot().enableLayerById(ge.LAYER_TREES, true);
   ge.getLayerRoot().enableLayerById(ge.LAYER_BUILDINGS, true);
+}
+
+function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
