@@ -1,4 +1,4 @@
-// TODO: Buy Sublime Text ($70)
+  // TODO: Buy Sublime Text ($70)
 
 var ge;
     
@@ -67,33 +67,40 @@ function doFrames(frames) {
 
   var timer = null;
   var pausing = false;
-  google.earth.addEventListener(ge, "frameend", function() {
-    // Make sure updates are all settled.
-    timer && clearTimeout(timer);
-    if (!pausing) {
-      timer = setTimeout(function() {
-        pausing = true;
-        $("body").css("background-color", colorSignal(frameIndex)) // Signal ready
-        setTimeout(incrementAndSetCamera, 500); // Give time for the snapshot before moving to next frame.
-        timer = null;
-      }, 100);
-    }
-  });
+  setTimeout(function() {
+    google.earth.addEventListener(ge, "frameend", function() {
+      // Make sure updates are all settled.
+      timer && clearTimeout(timer);
+      if (!pausing) {
+        timer = setTimeout(function() {
+          pausing = true;
+          $("body").css("background-color", colorSignal(frameIndex)) // Signal ready
+          setTimeout(incrementAndSetCamera, 500); // Give time for the snapshot before moving to next frame.
+          timer = null;
+        }, 200);
+      }
+    });
+  }, 9000);
 
   function incrementAndSetCamera() {
-    $("body").css("background-color", "#ffffff"); // Signal not ready
-    ++frameIndex;
-    pausing = false;
-    setCamera(frames[frameIndex]);
+    if (frameIndex < frames.length) {
+      $("body").css("background-color", "#ffffff"); // Signal not ready
+      ++frameIndex;
+      pausing = false;
+      setCamera(frames[frameIndex]);
+    }
+    else {
+      $("body").css("background-color", colorSignal(-2)); // Signal DONE.
+    }
   }
 
   // GO!
-  incrementAndSetCamera();
+  setTimeout(incrementAndSetCamera, 10000);
 
   function colorSignal(frameIndex) {
     if (frameIndex < 0) return "#ffffff";
 
-    var hex = frameIndex.toString(16);
+    var hex = (frameIndex + 1).toString(16);
     while (hex.length < 6) hex = "0" + hex;
     return "#" + hex;
   }
